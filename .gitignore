@@ -1,3 +1,7 @@
-dist
-node_modules
-.yarn
+.idea/
+.vscode/
+node_modules/
+tmp/
+temp/
+dist/
+.env
