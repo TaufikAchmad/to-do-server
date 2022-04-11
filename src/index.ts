@@ -7,7 +7,7 @@ import ormConfig from "./ormconfig";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from 'type-graphql';
-import { TaskResolver } from "./resolvers/tasks-resolver";
+import { TaskResolver } from "./resolvers/tasks";
 import { DataSource } from "typeorm/data-source/DataSource";
 
 console.log(`Connecting to ${process.env.DATABASE_TYPE} db`)
