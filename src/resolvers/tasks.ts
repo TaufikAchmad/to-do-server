@@ -1,5 +1,5 @@
 import { Tasks } from '../entity/Tasks';
-import { MyContext } from 'src/types';
+import { MyContext } from '../types';
 import { Resolver, Query, Ctx, Int, Arg, Mutation } from 'type-graphql';
 
 @Resolver()
@@ -11,12 +11,12 @@ export class TaskResolver {
     return em.find(Tasks, {});
   }
 
-  @Query(() => Tasks, {nullable: true})
+  @Query(() => [Tasks], {nullable: true})
   task(
     @Arg('id', () => Int) id: number,
     @Ctx() { em }: MyContext
-  ): Promise<Tasks | undefined> {
-    return em.findOne(Tasks, { id });
+  ): Promise<Tasks[]> {
+    return em.findBy(Tasks, { id });
   }
 
   @Mutation(() => Tasks)
