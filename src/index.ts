@@ -1,13 +1,13 @@
 import "reflect-metadata";
 import "dotenv-safe/config";
 import { __prod__ } from "./constants";
-import {  } from 'typeorm'
 import ormConfig from "./ormconfig";
-
 import express from "express";
+
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from 'type-graphql';
 import { TaskResolver } from "./resolvers/tasks";
+import { UserResolver } from "./resolvers/users";
 import { DataSource } from "typeorm/data-source/DataSource";
 
 console.log(`Connecting to ${process.env.DATABASE_TYPE} db`)
@@ -26,7 +26,7 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [TaskResolver],
+      resolvers: [TaskResolver, UserResolver],
       validate: false,
     }),
     context: () => ({ em: AppDataSource.manager })

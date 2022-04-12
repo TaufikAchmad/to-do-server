@@ -8,7 +8,7 @@ export default {
    "password": process.env.DATABASE_PASSWORD,
    "database": process.env.DB,
    "synchronize": true,
-   "logging": false,
+   "logging": ["error"],
    "entities": [
       "dist/entity/**/*.js"
    ],
