@@ -1,6 +1,6 @@
 import { Users } from "../entity/Users";
 import { MyContext } from "../types";
-import { Arg, Ctx, Field, InputType, Mutation, ObjectType, Resolver } from "type-graphql";
+import { Arg, Ctx, Field, InputType, Mutation, ObjectType, Query, Resolver } from "type-graphql";
 import argon2, { argon2d } from 'argon2';
 
 @InputType()
@@ -15,10 +15,10 @@ class UsernamePasswordInput {
 @ObjectType()
 class FieldError {
   @Field()
-  field: string;
+  field?: string;
 
   @Field()
-  message: string;
+  message?: string;
 }
 
 @ObjectType()
@@ -32,10 +32,24 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+  @Query(() => [Users], { nullable: true })
+  async me(
+    @Ctx() { em, req }: MyContext
+  ): Promise<Users[] | null> {
+    // not logged in
+    if (!req.session.userId) {
+      return null;
+    }
+
+    const user = await em.findBy(Users, {id: req.session.userId});
+
+    return user;
+  }
+
   @Mutation(() => UserResponse)
   async register(
     @Arg('options') {username, password}: UsernamePasswordInput,
-    @Ctx() { em }: MyContext
+    @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
 
     const hashedPassword = await argon2.hash(password, {type: argon2d});
@@ -46,6 +60,10 @@ export class UserResolver {
 
     try {
       await em.save(user);
+
+      // logged in after register by set cookies
+      req.session.userId = user.id
+
       return {user}
     } catch (err) {
       if (err.code === 'ER_DUP_ENTRY') {
@@ -58,7 +76,7 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async login(
     @Arg('options') {username, password}: UsernamePasswordInput,
-    @Ctx() { em }: MyContext
+    @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
     try {
       let user = await em.findOne(Users, { where: {username} });
@@ -70,6 +88,8 @@ export class UserResolver {
       if (!valid) {
         return {errors: [{ field: 'password', message: 'incorrect password!' }]}
       }
+
+      req.session.userId = user.id
 
       return {user}
     } catch (err) {
