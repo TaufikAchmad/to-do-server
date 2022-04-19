@@ -11,6 +11,7 @@ import {
   Resolver,
 } from 'type-graphql';
 import argon2, { argon2d } from 'argon2';
+import { SESSION_NAME } from '../constants';
 
 @InputType()
 class UsernamePasswordInput {
@@ -133,5 +134,21 @@ export class UserResolver {
     } catch (err) {
       return { errors: [{ field: 'error query', message: err.code }] };
     }
+  }
+
+  @Mutation(() => Boolean)
+  logout(@Ctx() { req, res }: MyContext): Promise<boolean> {
+    return new Promise((resolve) => {
+      req.session.destroy((err) => {
+        res.clearCookie(SESSION_NAME);
+        if (err) {
+          console.log(err);
+          resolve(false);
+          return;
+        }
+
+        resolve(true);
+      });
+    });
   }
 }

@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import 'dotenv-safe/config';
-import { __prod__ } from './constants';
+import { SESSION_NAME, __prod__ } from './constants';
 import ormConfig from './ormconfig';
 import express from 'express';
 
@@ -56,7 +56,7 @@ const main = async () => {
 
   app.use(
     session({
-      name: process.env.SESSION_NAME,
+      name: SESSION_NAME,
       store: new RedisStore({
         client: redisClient as any,
         disableTouch: true,
