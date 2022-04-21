@@ -12,13 +12,16 @@ import {
 } from 'type-graphql';
 import argon2, { argon2d } from 'argon2';
 import { SESSION_NAME } from '../constants';
+import * as Joiful from 'joiful';
 
 @InputType()
 class UsernamePasswordInput {
   @Field()
+  @Joiful.string().required().max(25)
   username: string;
 
   @Field()
+  @Joiful.string().required()
   password: string;
 }
 
@@ -100,18 +103,6 @@ export class UserResolver {
     @Ctx() { em, req }: MyContext
   ): Promise<UserResponse> {
     try {
-      if (!username) {
-        return {
-          errors: [{ field: 'username', message: 'username cannot be empty!' }],
-        };
-      }
-
-      if (!password) {
-        return {
-          errors: [{ field: 'password', message: 'password cannot be empty!' }],
-        };
-      }
-
       let user = await em.findOne(Users, { where: { username } });
       if (!user) {
         return {

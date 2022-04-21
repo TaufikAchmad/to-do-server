@@ -4,7 +4,7 @@ import { SESSION_NAME, __prod__ } from './constants';
 import ormConfig from './ormconfig';
 import express from 'express';
 
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer, UserInputError } from 'apollo-server-express';
 import { buildSchema } from 'type-graphql';
 import { TaskResolver } from './resolvers/tasks';
 import { UserResolver } from './resolvers/users';
@@ -14,11 +14,11 @@ import { createClient } from 'redis';
 import session from 'express-session';
 import connectRedis from 'connect-redis';
 import cors from 'cors';
-
-console.log(`Connecting to ${process.env.DATABASE_TYPE} db`);
+import * as joiful from 'joiful';
 
 const main = async () => {
   const AppDataSource = new DataSource(ormConfig);
+  console.log(`Connecting to ${process.env.DATABASE_TYPE} db`);
   AppDataSource.initialize()
     .then(() => {
       console.log(
@@ -77,7 +77,20 @@ const main = async () => {
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
       resolvers: [TaskResolver, UserResolver],
-      validate: false,
+      validate: (argValue, _) => {
+        const { error } = joiful.validate(argValue);
+        if (error?.details) {
+          const validationErrors = error.details.map((err) => {
+            return {
+              field: err.context?.key,
+              message: err.message,
+            };
+          });
+          throw new UserInputError('Invalid argument value', {
+            validationErrors,
+          });
+        }
+      },
     }),
     context: ({ req, res }) => ({ em: AppDataSource.manager, req, res }),
   });
